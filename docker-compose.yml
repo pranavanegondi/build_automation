@@ -1,0 +1,65 @@
+version: "3"
+services:
+  redis:
+    image: redis
+    networks: 
+      - webnet
+    volumes:
+      - ./redis-data:/data
+  mysql:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    networks: 
+      - webnet
+    environment:
+      MYSQL_USER: vikram
+      MYSQL_PASSWORD: vikram
+      MYSQL_ROOT_PASSWORD: vikram
+    volumes:
+        - ./mysql-data:/var/lib/msyql/data
+        - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3308:3306"
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: vikrammistry/scheduler
+    ports:
+      - "4000:4000"
+    networks:
+      - webnet
+    depends_on:
+      - mysql
+      - redis
+    command: ["./wait-for-it.sh", "mysql:3306","--","npm","run","start_dev"]
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      REDIS_HOST: redis
+      REDIS_HOST1: redis
+      REDIS_HOST2: redis
+      REDIS_PORT: 6379
+      DATABASE_USERNAME: vikram
+      DATABASE_PASSWORD: vikram
+      DATABASE_NAME: v2_db
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      REPORT_DATABASE_USERNAME: vikram
+      REPORT_DATABASE_PASSWORD: vikram
+      REPORT_DATABASE_NAME: v2_db
+      REPORT_DATABASE_HOST: mysql
+      REPORT_DATABASE_PORT: 3306
+      DATABASE_USERNAME_SITEL: vikram
+      DATABASE_PASSWORD_SITEL: vikram
+      DATABASE_NAME_SITEL: whmain
+      DATABASE_HOST_SITEL: mysql
+      DATABASE_PORT_SITEL: 3306
+      TEACHER_RECRUITMENT_HOST: mysql
+      TEACHER_RECRUITMENT_USERNAME: vikram
+      TEACHER_RECRUITMENT_PASSWORD: vikram
+      TEACHER_RECRUITMENT_DATABASE: teacher_rec
+      TEACHER_RECRUITMENT_PORT: 3306
+networks:
+  webnet:
